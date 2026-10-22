@@ -38,7 +38,7 @@ html { font-size: var(--fs); -webkit-text-size-adjust: 100%; }
 body {
   margin: 0; background: var(--bg); color: var(--ink);
   font-family: var(--font); font-weight: 500; line-height: 1.55;
-  padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(var(--dock-h, 86px) + 24px);
 }
 button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }
@@ -61,16 +61,18 @@ a { color: var(--brand); }
 
 main { max-width: 900px; margin: 0 auto; padding: 18px max(16px, env(safe-area-inset-right, 0px)) 18px max(16px, env(safe-area-inset-left, 0px)); display: grid; gap: 16px; }
 
-/* plovoucí ovládání dole */
+/* ovládání dole: pevná lišta, obsah pod ní nikdy nezmizí napůl */
 .dock {
-  position: fixed; right: max(12px, env(safe-area-inset-right, 0px)); bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-  z-index: 60; display: flex; gap: 10px;
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; display: flex; gap: 10px; align-items: center;
+  padding: 10px max(14px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(14px, env(safe-area-inset-left, 0px));
+  background: rgba(246, 243, 239, .97); border-top: 2px solid var(--line);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
 }
 .dock button {
-  min-height: 62px; min-width: 70px; padding: 8px 16px; border-radius: 16px;
-  border: 3px solid #fff; background: #1d1a18; color: #fff; font-weight: 800; font-size: 1.05rem;
-  box-shadow: 0 3px 12px rgba(0,0,0,.35);
+  min-height: 60px; min-width: 76px; padding: 8px 18px; border-radius: 16px;
+  border: 0; background: #1d1a18; color: #fff; font-weight: 800; font-size: 1.05rem;
 }
+.dock #readBtn { margin-right: auto; min-width: 150px; }
 
 /* karty a tlačítka */
 .card { background: var(--card); border: 2px solid var(--line); border-radius: 18px; padding: 18px; display: grid; gap: 12px; }
@@ -116,13 +118,24 @@ main { max-width: 900px; margin: 0 auto; padding: 18px max(16px, env(safe-area-i
 .content table { display: block; overflow-x: auto; max-width: 100%; }
 .content iframe { width: 100%; aspect-ratio: 16/9; height: auto; border: 0; border-radius: 12px; background: #000; }
 .content p { margin: 0 0 .8em; }
+/* tlačítka, která autoři kurzu dělají Bootstrapem (btn, btn-primary…): každé na vlastním řádku, nic se nepřekrývá */
+.content .btn, .content a.button, .content .btn-block {
+  display: block; width: 100%; min-height: 64px; margin: 12px 0; padding: 14px 18px; line-height: 1.3;
+  text-align: center; text-decoration: none; border-radius: 16px; background: var(--brand); color: #fff; font-weight: 800;
+}
+.content .btn.b3v-on { background: var(--ink); }
+.content .btn.ghost { background: #fff; color: var(--ink); border: 3px solid var(--ink); }
+.content .btn + br, .content .b3v-blok + br { display: none; }
+.content .collapse:not(.show), .content .tab-pane:not(.active) { display: none; }
+.content .b3v-blok { display: block !important; margin: 12px 0 !important; }
 
 /* video */
 .player { display: grid; gap: 12px; }
-.player video { width: 100%; max-height: 70vh; background: #000; border-radius: 14px; }
+.player video { width: 100%; max-height: min(70vh, calc(100vh - var(--top-h, 80px) - var(--dock-h, 86px) - 40px)); background: #000; border-radius: 14px; }
 .vrow { display: flex; flex-wrap: wrap; gap: 10px; }
 .vbtn { flex: 1 1 140px; min-height: 62px; border-radius: 14px; border: 3px solid #888; background: #fff; font-weight: 800; font-size: 1.05rem; padding: 6px 10px; }
 .vbtn.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+.vrow:has([data-rate]) { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .vplay { width: 100%; min-height: 76px; border-radius: 16px; border: 0; background: var(--brand); color: #fff; font-size: 1.45rem; font-weight: 800; }
 .vinfo { font-weight: 700; color: var(--soft); }
 .resume { background: var(--warn-bg); border: 2px solid var(--warn-line); border-radius: 14px; padding: 12px; display: grid; gap: 10px; font-weight: 800; }
@@ -134,11 +147,17 @@ main { max-width: 900px; margin: 0 auto; padding: 18px max(16px, env(safe-area-i
 .que .info .state, .que .info .questionflag, .que .info .editquestion, .que .questionflagimage, .que .info .questionflagpostdata { display: none !important; }
 .que .qtext { font-size: 1.2rem; font-weight: 700; }
 .que .prompt { font-size: .9rem; color: var(--soft); margin: 4px 0; }
+.que fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.que legend { padding: 0; font-size: .9rem; color: var(--soft); }
 .que .answer > div { display: flex; align-items: flex-start; gap: 12px; padding: 14px; margin: 10px 0; border: 3px solid var(--line); border-radius: 14px; cursor: pointer; background: #fff; }
 .que .answer > div:has(input:checked) { background: var(--sel); border-color: var(--ink); }
 .que .answer input[type=radio], .que .answer input[type=checkbox] { width: 30px; height: 30px; flex: 0 0 auto; margin: 2px 0 0; accent-color: var(--brand); }
-.que .answer label, .que .answer [data-region="answer-label"] { cursor: pointer; flex: 1; display: flex; gap: 8px; }
-.que .answernumber { font-weight: 800; }
+.que .answer label, .que .answer [data-region="answer-label"] { cursor: pointer; flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.que .answer label > div, .que .answer [data-region="answer-label"] > div { flex: 1 1 0; min-width: 10ch; }
+.que .answernumber { font-weight: 800; flex: 0 0 auto; white-space: nowrap; }
+.que .answer .tagbreak { flex-basis: 100%; height: 0; }
+.que .answer .tag { margin: 6px 0 0; white-space: normal; padding: 4px 12px; font-size: .95rem; }
+.que .answer input:disabled { opacity: 1; }
 .que input[type=text], .que select, .que textarea { min-height: 56px; border: 3px solid var(--line); border-radius: 12px; padding: 8px 12px; font-size: 1.1rem; background: #fff; max-width: 100%; }
 .que .qtype_multichoice_clearchoice, .que .accesshide, .que .sr-only, .que .visually-hidden { display: none !important; }
 .que .outcome, .que .feedback { font-size: 1rem; }
@@ -146,7 +165,7 @@ main { max-width: 900px; margin: 0 auto; padding: 18px max(16px, env(safe-area-i
 .que .answer > div.b3v-ok { background: var(--ok-bg) !important; border-color: var(--ok) !important; }
 .que .answer > div.b3v-bad { background: var(--bad-bg) !important; border-color: var(--bad) !important; }
 .que .icon, .que img.icon { display: none; }
-.tag { display: inline-block; margin-left: 8px; padding: 2px 10px; border-radius: 9px; font-weight: 800; font-size: .9rem; color: #fff; white-space: nowrap; }
+.tag { display: inline-block; margin-left: 8px; padding: 2px 10px; border-radius: 9px; font-weight: 800; font-size: .9rem; color: #fff; white-space: nowrap; align-self: flex-start; }
 .tag.ok { background: var(--ok); } .tag.bad { background: var(--bad); }
 .verdict { font-size: 1.5rem; font-weight: 800; padding: 10px 16px; border-radius: 14px; color: #fff; }
 .verdict.ok { background: var(--ok); } .verdict.bad { background: var(--bad); } .verdict.part { background: #b86e00; }
@@ -161,9 +180,49 @@ main { max-width: 900px; margin: 0 auto; padding: 18px max(16px, env(safe-area-i
 .reader p { font-size: 1.3rem; line-height: 1.75; margin: 0 0 1em; padding: 6px 10px; border-radius: 10px; cursor: pointer; }
 .reader p.on { background: var(--sel); outline: 3px solid var(--warn-line); }
 .reader .pg { margin: 20px 0 8px; font-weight: 800; color: var(--soft); border-top: 2px solid var(--line); padding-top: 8px; }
-.sticky-tools { position: sticky; top: calc(80px + env(safe-area-inset-top, 0px)); z-index: 40; background: var(--bg); padding: 8px 0; }
+.sticky-tools { position: sticky; top: var(--top-h, 80px); z-index: 40; background: var(--bg); padding: 8px 0; }
 
-@media (max-width: 520px) { :root { --fs: 20px; } .top h1 { font-size: 1rem; } }
+@media (max-width: 520px) {
+  :root { --fs: 20px; }
+  .top h1 { font-size: 1rem; }
+  .dock #readBtn { min-width: 0; }
+  main { padding-left: max(10px, env(safe-area-inset-left, 0px)); padding-right: max(10px, env(safe-area-inset-right, 0px)); }
+  .card, .que { padding: 12px; }
+  .vplay { font-size: 1.2rem; min-height: 66px; }
+  .vbtn { font-size: .95rem; padding: 6px 4px; }
+  .que .answer > div { padding: 12px 10px; gap: 10px; }
+}
+/* nízká obrazovka (iPad i telefon na šířku): menší lišty, víc místa pro obsah */
+@media (max-height: 820px) and (orientation: landscape) {
+  .top { padding-top: calc(6px + env(safe-area-inset-top, 0px)); padding-bottom: 6px; }
+  .back { min-height: 48px; padding: 4px 14px; }
+  .dock { padding-top: 6px; padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px)); }
+  .dock button { min-height: 50px; }
+}
+/* na šířku s dost místem: video vlevo, ovládání vpravo; širší obsah */
+@media (orientation: landscape) and (min-width: 820px) {
+  main { max-width: 1240px; }
+  .player { grid-template-columns: minmax(0, 1.75fr) minmax(250px, 1fr); align-items: start; column-gap: 16px; }
+  .player > video { grid-column: 1; grid-row: 1 / span 8; max-height: calc(100vh - var(--top-h, 80px) - var(--dock-h, 86px) - 70px); }
+  .player > :not(video) { grid-column: 2; }
+  .player .vrow { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .player .vrow [data-fs] { grid-column: 1 / -1; }
+  .player .vrow:has([data-rate]) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .player .vrow:has([data-rate]) .vbtn { font-size: .95rem; padding: 6px 4px; }
+  .player .vplay { min-height: 70px; font-size: 1.25rem; }
+  .row > * { flex-basis: 260px; }
+}
+/* telefon na šířku: jen jeden sloupec, video přesně mezi lišty, lišty co nejnižší */
+@media (orientation: landscape) and (max-height: 500px) {
+  .top { padding-top: calc(4px + env(safe-area-inset-top, 0px)); padding-bottom: 4px; }
+  .top h1 { font-size: .95rem; }
+  .back { min-height: 40px; padding: 2px 12px; font-size: .95rem; }
+  .dock { padding-top: 4px; padding-bottom: calc(4px + env(safe-area-inset-bottom, 0px)); }
+  .dock button { min-height: 42px; padding: 4px 14px; font-size: .95rem; }
+  .player { grid-template-columns: minmax(0, 1fr); }
+  .player > * { grid-column: 1 !important; }
+  .player > video { grid-row: auto; max-height: calc(100vh - var(--top-h, 50px) - var(--dock-h, 52px) - 16px); }
+}
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
 </style>
 </head>
@@ -202,6 +261,17 @@ const applyFs = () => document.documentElement.style.setProperty('--fs', fs + 'p
 applyFs();
 $('#fsMinus').onclick = () => { fs = Math.max(16, fs - 2); store.set('fs', fs); applyFs(); };
 $('#fsPlus').onclick = () => { fs = Math.min(34, fs + 2); store.set('fs', fs); applyFs(); };
+
+/* ---------- výška lišt (mění se s písmem a otočením) ---------- */
+const measureBars = () => {
+  const r = document.documentElement.style;
+  r.setProperty('--top-h', $('.top').offsetHeight + 'px');
+  r.setProperty('--dock-h', $('.dock').offsetHeight + 'px');
+};
+if (window.ResizeObserver) { const ro = new ResizeObserver(measureBars); ro.observe($('.top')); ro.observe($('.dock')); }
+window.addEventListener('resize', measureBars);
+window.addEventListener('orientationchange', () => setTimeout(measureBars, 300));
+measureBars();
 
 /* ---------- Moodle API ---------- */
 let auth = store.get('auth');            // { token, userid, fullname }
@@ -362,7 +432,7 @@ async function viewCourse(cid) {
       if (!mods.length && !strip(sec.summary)) return;
       const trackable = mods.filter(m => m.completiondata && m.modname !== 'label');
       const allDone = trackable.length && trackable.every(m => m.completiondata.state >= 1);
-      html += `<h2 class="section-title">${esc(strip(sec.name) || 'Úvod')}${allDone ? '<span class="chip">✔ hotovo</span>' : ''}</h2>`;
+      html += `<h2 class="section-title">${esc(strip(sec.name) || 'Úvod')}${allDone ? '<span class="chip">✓ hotovo</span>' : ''}</h2>`;
       if (strip(sec.summary) && strip(sec.summary).length < 400) html += `<div class="label-text muted">${esc(strip(sec.summary))}</div>`;
       mods.forEach(m => {
         if (m.modname === 'label') {
@@ -378,7 +448,7 @@ async function viewCourse(cid) {
         html += `<a class="big ${kind}" href="#/mod/${m.modname}/${m.id}/${cid}">
           <span class="ico">${m.modname === 'page' && kind === 'video' ? '🎬' : meta.ico}</span>
           <span class="txt">${esc(strip(m.name))}<span class="sub">${esc(sub)}</span></span>
-          ${done ? '<span class="done">✔ hotovo</span>' : ''}
+          ${done ? '<span class="done">✓ hotovo</span>' : ''}
         </a>`;
       });
     });
@@ -408,6 +478,7 @@ async function viewPage(cmid, cid) {
     tpl.innerHTML = page.content || '';
     enhanceContent(tpl.content);
     box.appendChild(tpl.content);
+    fixLayout(box);
     logView('mod_page_view_page', { pageid: page.id });
     dropCache('course:' + cid);
   } catch (e) { if (t === renderToken) showError(e); }
@@ -421,7 +492,13 @@ function enhanceContent(box) {
   $$('video', box).forEach(v => {
     const src = v.getAttribute('src') || ($('source[src]', v) || {}).getAttribute?.('src');
     const holder = v.closest('.mediaplugin, .video-js, .vjs-fluid') || v;
-    if (src) { handled.add(src); holder.replaceWith(makePlayer(fileUrl(src), v.getAttribute('poster') ? fileUrl(v.getAttribute('poster')) : '')); }
+    if (src) {
+      handled.add(src);
+      const pl = makePlayer(fileUrl(src), v.getAttribute('poster') ? fileUrl(v.getAttribute('poster')) : '');
+      const id = (v.id || holder.id || '').replace(/_html5_api$/, '');
+      if (id) $('video', pl).id = id;   // odkazy autorů na konkrétní video dál fungují
+      holder.replaceWith(pl);
+    }
   });
   $$('a[href]', box).forEach(a => {
     const h = a.getAttribute('href');
@@ -454,6 +531,61 @@ function enhanceContent(box) {
     }
   });
 }
+
+// Prvky, které v Moodlu ovládá Bootstrap nebo přehrávač: sbalovací části a skoky na čas ve videu.
+function toSeconds(x) {
+  if (x == null) return null;
+  const m = String(x).trim().match(/^(?:(\d+):)?(\d+):(\d{1,2})$/);
+  if (m) return (+(m[1] || 0)) * 3600 + (+m[2]) * 60 + (+m[3]);
+  const n = parseFloat(String(x).replace(/s$/, ''));
+  return isFinite(n) ? n : null;
+}
+function seekFor(el) {
+  const d = el.dataset || {};
+  let t = toSeconds(d.time ?? d.start ?? d.seek);
+  const h = el.getAttribute('href') || '';
+  if (t == null && (h.startsWith('#') || /\.(mp4|m4v|mov|webm)\b/i.test(h))) { const m = h.match(/[#?&](?:t|time|start)=([\d:.]+s?)/i); if (m) t = toSeconds(m[1]); }
+  return t;
+}
+function fixLayout(box) {
+  // inline prvky s pozadím a velkým odsazením (autorská „tlačítka“) se jinak překrývají
+  $$('a, span, button', box).forEach(el => {
+    const cs = getComputedStyle(el);
+    if (cs.display !== 'inline') return;
+    const bg = cs.backgroundColor;
+    const hasBg = bg && bg !== 'transparent' && !/rgba\(0, 0, 0, 0\)/.test(bg);
+    if (hasBg && parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom) >= 8) el.classList.add('b3v-blok');
+  });
+  // záporné okraje z editoru (prvky přes sebe)
+  $$('*', box).forEach(el => { if (parseFloat(getComputedStyle(el).marginTop) < -2) el.style.marginTop = '0'; });
+}
+document.addEventListener('click', e => {
+  const t = e.target.closest('#view .content [data-toggle="collapse"], #view .content [data-bs-toggle="collapse"], #view .content [data-toggle="tab"], #view .content [data-bs-toggle="tab"]');
+  if (t) {
+    e.preventDefault();
+    const sel = t.getAttribute('data-bs-target') || t.getAttribute('data-target') || t.getAttribute('href');
+    let target = null; try { target = sel && sel.startsWith('#') ? $('#view ' + sel) : null; } catch (err) {}
+    if (!target) return;
+    if (/tab/.test(t.getAttribute('data-toggle') || t.getAttribute('data-bs-toggle'))) {
+      $$('.tab-pane', target.parentElement).forEach(p => p.classList.toggle('active', p === target));
+    } else {
+      const open = !target.classList.contains('show');
+      const parent = target.getAttribute('data-parent') || target.getAttribute('data-bs-parent');
+      if (open && parent) $$('.collapse.show', $('#view ' + parent) || document).forEach(x => x.classList.remove('show'));
+      target.classList.toggle('show', open); t.classList.toggle('b3v-on', open);
+      if (open) setTimeout(() => target.scrollIntoView({ block: 'start', behavior: 'smooth' }), 50);
+    }
+    return;
+  }
+  const a = e.target.closest('#view .content a, #view .content button, #view .content [data-time], #view .content [data-start], #view .content [data-seek]');
+  if (!a) return;
+  const sec = seekFor(a);
+  if (sec == null) return;
+  const v = $('#view .player video'); if (!v) return;
+  e.preventDefault();
+  v.currentTime = sec; const p = v.play(); if (p && p.catch) p.catch(() => {});
+  v.scrollIntoView({ block: 'center', behavior: 'smooth' });
+});
 
 /* ---------- video přehrávač ---------- */
 const fmt = s => { s = Math.max(0, Math.floor(s || 0)); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(x).padStart(2, '0'); };
@@ -700,7 +832,7 @@ $('#readBtn').onclick = () => {
   if (window.speechSynthesis && (speechSynthesis.speaking || speechSynthesis.pending)) { stopAll(); return; }
   if (rd && $('#rText')) { readFrom(rd.idx || 0); return; }
   const parts = $$('#view h2, #view p, #view li, #view .qtext, #view .answer label, #view .answer [data-region="answer-label"], #view .rightanswer, #view .verdict, #view .score, #view .big .txt, #view .notice')
-    .filter(el => el.offsetParent !== null && !el.closest('.vrow')).map(el => el.innerText.replace(/[✔✘◐›]/g, '').trim()).filter(Boolean);
+    .filter(el => el.offsetParent !== null && !el.closest('.vrow')).map(el => el.innerText.replace(/[✓✗◐›]/g, '').trim()).filter(Boolean);
   const text = parts.join('. ');
   if (!text) return;
   $('#readBtn').textContent = '⏹ Stop';
@@ -783,7 +915,7 @@ function addReadButtons(scope) {
   $$('.que', scope).forEach(q => {
     const qt = $('.qtext', q); if (!qt || $('.readq', q)) return;
     const b = document.createElement('button'); b.type = 'button'; b.className = 'readq'; b.textContent = '🔈 Přečíst otázku';
-    readButton(b, '🔈 Přečíst otázku', () => qt.innerText + '. ' + $$('.answer label, .answer [data-region="answer-label"]', q).map((a, i) => 'Možnost ' + (i + 1) + ': ' + a.innerText.replace(/^\s*[a-z]\.\s*/i, '').replace(/[✔✘].*$/s, '').trim()).join('. '));
+    readButton(b, '🔈 Přečíst otázku', () => qt.innerText + '. ' + $$('.answer label, .answer [data-region="answer-label"]', q).map((a, i) => 'Možnost ' + (i + 1) + ': ' + a.innerText.replace(/^\s*[a-z]\.\s*/i, '').replace(/[✓✗].*$/s, '').trim()).join('. '));
     qt.insertAdjacentElement('beforebegin', b);
   });
 }
@@ -815,7 +947,7 @@ async function viewAttempt(attemptid, page, cmid, cid) {
     if (page > 0) nav.insertAdjacentHTML('beforeend', `<button class="btn ghost" type="button" id="prev">← Předchozí otázky</button>`);
     nav.insertAdjacentHTML('beforeend', hasNext
       ? `<button class="btn" type="button" id="next">Další otázky →</button>`
-      : `<button class="btn green" type="button" id="fin">Dokončit test ✔</button>`);
+      : `<button class="btn green" type="button" id="fin">Dokončit test ✓</button>`);
     const save = async () => ws('mod_quiz_process_attempt', { attemptid, data: collect(form), finishattempt: false, timeup: false });
     const go = async (btn, target) => {
       const label = btn.textContent; btn.disabled = true; btn.textContent = 'Ukládám…';
@@ -845,11 +977,11 @@ async function viewSummary(attemptid, cmid, cid) {
     view(`
       ${missing.length
         ? `<div class="error" style="font-size:1.25rem">⚠ Nevyplněné otázky: č. ${missing.map(x => esc(x.number || x.slot)).join(', ')}</div>`
-        : `<div class="notice" style="background:var(--ok-bg);border-color:var(--ok)">✔ Všechny otázky jsou vyplněné.</div>`}
+        : `<div class="notice" style="background:var(--ok-bg);border-color:var(--ok)">✓ Všechny otázky jsou vyplněné.</div>`}
       <div class="qnav">${qs.map(x => `<span class="${isMissing(x) ? 'miss' : 'okk'}">${esc(x.number || x.slot)}</span>`).join('')}</div>
       <div class="row">
         <button class="btn ghost" type="button" id="backq">← Vrátit se k otázkám</button>
-        <button class="btn green" type="button" id="send">Odeslat test ✔</button>
+        <button class="btn green" type="button" id="send">Odeslat test ✓</button>
       </div>`);
     $('#backq').onclick = () => { location.hash = `#/attempt/${attemptid}/0/${cmid}/${cid}`; };
     $('#send').onclick = async e => {
@@ -859,7 +991,7 @@ async function viewSummary(attemptid, cmid, cid) {
         await ws('mod_quiz_process_attempt', { attemptid, data: [], finishattempt: true, timeup: false });
         dropCache('course:' + cid);
         location.replace(`#/review/${attemptid}/${cmid}/${cid}`);
-      } catch (err) { b.disabled = false; b.textContent = 'Odeslat test ✔'; b.insertAdjacentHTML('afterend', `<div class="error">${esc(err.message)}</div>`); }
+      } catch (err) { b.disabled = false; b.textContent = 'Odeslat test ✓'; b.insertAdjacentHTML('afterend', `<div class="error">${esc(err.message)}</div>`); }
     };
   } catch (e) { if (t === renderToken) showError(e); }
 }
@@ -909,8 +1041,8 @@ function markReview(scope) {
     if (correct.length) {
       opts.forEach(d => {
         const right = correct.includes(d);
-        if (right) { d.o.classList.add('b3v-ok'); d.lab.insertAdjacentHTML('beforeend', `<span class="tag ok">${d.checked ? '✔ Vaše odpověď – správně' : '✔ Správná odpověď'}</span>`); }
-        else if (d.checked) { d.o.classList.add('b3v-bad'); d.lab.insertAdjacentHTML('beforeend', '<span class="tag bad">✘ Vaše odpověď – špatně</span>'); }
+        if (right) { d.o.classList.add('b3v-ok'); d.lab.insertAdjacentHTML('beforeend', `<span class="tagbreak"></span><span class="tag ok">${d.checked ? '✓ Vaše odpověď – správně' : '✓ Správná odpověď'}</span>`); }
+        else if (d.checked) { d.o.classList.add('b3v-bad'); d.lab.insertAdjacentHTML('beforeend', '<span class="tagbreak"></span><span class="tag bad">✗ Vaše odpověď – špatně</span>'); }
       });
       const chosen = opts.filter(d => d.checked);
       userOk = chosen.length > 0 && chosen.every(d => correct.includes(d)) && correct.every(d => d.checked);
@@ -922,7 +1054,7 @@ function markReview(scope) {
     $$('input.incorrect, select.incorrect', q).forEach(i => { i.style.background = 'var(--bad-bg)'; i.style.borderColor = 'var(--bad)'; });
     if (userOk !== null || partial) {
       total++; if (userOk) good++;
-      q.insertAdjacentHTML('afterbegin', `<div class="verdict ${partial ? 'part' : userOk ? 'ok' : 'bad'}">${partial ? '◐ Částečně správně' : userOk ? '✔ SPRÁVNĚ' : '✘ ŠPATNĚ'}</div>`);
+      q.insertAdjacentHTML('afterbegin', `<div class="verdict ${partial ? 'part' : userOk ? 'ok' : 'bad'}">${partial ? '◐ Částečně správně' : userOk ? '✓ SPRÁVNĚ' : '✗ ŠPATNĚ'}</div>`);
     }
     const qt = $('.qtext', q);
     if (raEl && qt && !correct.length) qt.insertAdjacentElement('afterend', raEl);
