@@ -1,0 +1,978 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Univerzita pro babičku</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Univerzita">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#8a1116">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.json">
+<style>
+/* Jedno světlé, kontrastní vzhledové pojetí – záměrně bez tmavého režimu (čitelnost pro seniory) */
+:root {
+  --bg: #f6f3ef;
+  --card: #ffffff;
+  --ink: #141210;
+  --soft: #4a4440;
+  --line: #d9d2cb;
+  --brand: #8a1116;
+  --brand-ink: #ffffff;
+  --ok: #17803a;
+  --ok-bg: #dcf5e3;
+  --bad: #b3151b;
+  --bad-bg: #ffe1e1;
+  --warn-bg: #fff2c2;
+  --warn-line: #c99700;
+  --sel: #fff2c2;
+  --font: -apple-system, "SF Pro Text", "Segoe UI", Roboto, Arial, sans-serif;
+  --fs: 22px;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { font-size: var(--fs); -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: var(--font); font-weight: 500; line-height: 1.55;
+  padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px));
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 4px solid #ffbf00; outline-offset: 2px; }
+a { color: var(--brand); }
+
+/* horní lišta */
+.top {
+  position: sticky; top: 0; z-index: 50;
+  background: var(--brand); color: var(--brand-ink);
+  padding: calc(10px + env(safe-area-inset-top, 0px)) max(14px, env(safe-area-inset-right, 0px)) 10px max(14px, env(safe-area-inset-left, 0px));
+  display: flex; align-items: center; gap: 12px;
+}
+.top h1 { font-size: 1.15rem; margin: 0; flex: 1; min-width: 0; line-height: 1.25; text-wrap: balance; }
+.back {
+  flex: 0 0 auto; min-height: 56px; padding: 8px 18px; border-radius: 14px; border: 3px solid #fff;
+  background: #fff; color: var(--brand); font-weight: 800; font-size: 1.05rem;
+}
+.back[hidden] { display: none; }
+
+main { max-width: 900px; margin: 0 auto; padding: 18px max(16px, env(safe-area-inset-right, 0px)) 18px max(16px, env(safe-area-inset-left, 0px)); display: grid; gap: 16px; }
+
+/* plovoucí ovládání dole */
+.dock {
+  position: fixed; right: max(12px, env(safe-area-inset-right, 0px)); bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  z-index: 60; display: flex; gap: 10px;
+}
+.dock button {
+  min-height: 62px; min-width: 70px; padding: 8px 16px; border-radius: 16px;
+  border: 3px solid #fff; background: #1d1a18; color: #fff; font-weight: 800; font-size: 1.05rem;
+  box-shadow: 0 3px 12px rgba(0,0,0,.35);
+}
+
+/* karty a tlačítka */
+.card { background: var(--card); border: 2px solid var(--line); border-radius: 18px; padding: 18px; display: grid; gap: 12px; }
+.big {
+  display: flex; align-items: center; gap: 16px; width: 100%; text-align: left;
+  min-height: 84px; padding: 14px 18px; border-radius: 18px; border: 3px solid var(--line);
+  background: var(--card); color: var(--ink); font-size: 1.15rem; font-weight: 700; text-decoration: none;
+}
+.big:active { transform: scale(.99); }
+.big .ico { font-size: 2rem; flex: 0 0 auto; width: 2.4rem; text-align: center; }
+.big .txt { flex: 1; min-width: 0; }
+.big .sub { display: block; font-size: .85rem; font-weight: 600; color: var(--soft); }
+.big .done { flex: 0 0 auto; font-size: .85rem; font-weight: 800; color: var(--ok); background: var(--ok-bg); padding: 4px 10px; border-radius: 10px; }
+.big.video { border-color: #c9a3a5; }
+.big.quiz { border-color: #a9b9d6; }
+.btn {
+  min-height: 64px; padding: 12px 22px; border-radius: 16px; border: 0;
+  background: var(--brand); color: #fff; font-weight: 800; font-size: 1.15rem; width: 100%;
+}
+.btn.ghost { background: #fff; color: var(--ink); border: 3px solid var(--ink); }
+.btn.green { background: var(--ok); }
+.row { display: flex; flex-wrap: wrap; gap: 12px; }
+.row > * { flex: 1 1 200px; }
+.muted { color: var(--soft); }
+.section-title { font-size: 1.3rem; margin: 18px 4px 0; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.section-title .chip { font-size: .8rem; font-weight: 800; color: var(--ok); background: var(--ok-bg); padding: 2px 10px; border-radius: 10px; }
+.label-text { padding: 4px 6px; }
+.notice { background: var(--warn-bg); border: 2px solid var(--warn-line); border-radius: 14px; padding: 14px 16px; font-weight: 700; }
+.error { background: var(--bad-bg); border: 2px solid var(--bad); border-radius: 14px; padding: 14px 16px; font-weight: 700; color: #6d0b0e; }
+.loading { text-align: center; padding: 40px 10px; font-size: 1.2rem; font-weight: 700; color: var(--soft); }
+
+/* přihlášení */
+.login { max-width: 560px; margin: 4vh auto 0; }
+.login h2 { margin: 0; font-size: 1.6rem; }
+.field { display: grid; gap: 6px; }
+.field label { font-weight: 800; }
+.field input { min-height: 64px; padding: 10px 16px; border-radius: 14px; border: 3px solid var(--line); background: #fff; font-size: 1.2rem; }
+.field input:focus { border-color: var(--brand); outline: none; }
+
+/* obsah stránek (text z Moodlu) */
+.content { font-size: 1.1rem; line-height: 1.7; overflow-wrap: anywhere; }
+.content img { max-width: 100%; height: auto; }
+.content table { display: block; overflow-x: auto; max-width: 100%; }
+.content iframe { width: 100%; aspect-ratio: 16/9; height: auto; border: 0; border-radius: 12px; background: #000; }
+.content p { margin: 0 0 .8em; }
+
+/* video */
+.player { display: grid; gap: 12px; }
+.player video { width: 100%; max-height: 70vh; background: #000; border-radius: 14px; }
+.vrow { display: flex; flex-wrap: wrap; gap: 10px; }
+.vbtn { flex: 1 1 140px; min-height: 62px; border-radius: 14px; border: 3px solid #888; background: #fff; font-weight: 800; font-size: 1.05rem; padding: 6px 10px; }
+.vbtn.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+.vplay { width: 100%; min-height: 76px; border-radius: 16px; border: 0; background: var(--brand); color: #fff; font-size: 1.45rem; font-weight: 800; }
+.vinfo { font-weight: 700; color: var(--soft); }
+.resume { background: var(--warn-bg); border: 2px solid var(--warn-line); border-radius: 14px; padding: 12px; display: grid; gap: 10px; font-weight: 800; }
+
+/* testy */
+.que { background: #fff; border: 2px solid var(--line); border-radius: 18px; padding: 16px; display: grid; gap: 10px; margin: 0; }
+.que .info { display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: baseline; font-size: .9rem; color: var(--soft); }
+.que .info h3 { margin: 0; font-size: 1rem; color: var(--ink); }
+.que .info .state, .que .info .questionflag, .que .info .editquestion, .que .questionflagimage, .que .info .questionflagpostdata { display: none !important; }
+.que .qtext { font-size: 1.2rem; font-weight: 700; }
+.que .prompt { font-size: .9rem; color: var(--soft); margin: 4px 0; }
+.que .answer > div { display: flex; align-items: flex-start; gap: 12px; padding: 14px; margin: 10px 0; border: 3px solid var(--line); border-radius: 14px; cursor: pointer; background: #fff; }
+.que .answer > div:has(input:checked) { background: var(--sel); border-color: var(--ink); }
+.que .answer input[type=radio], .que .answer input[type=checkbox] { width: 30px; height: 30px; flex: 0 0 auto; margin: 2px 0 0; accent-color: var(--brand); }
+.que .answer label, .que .answer [data-region="answer-label"] { cursor: pointer; flex: 1; display: flex; gap: 8px; }
+.que .answernumber { font-weight: 800; }
+.que input[type=text], .que select, .que textarea { min-height: 56px; border: 3px solid var(--line); border-radius: 12px; padding: 8px 12px; font-size: 1.1rem; background: #fff; max-width: 100%; }
+.que .qtype_multichoice_clearchoice, .que .accesshide, .que .sr-only, .que .visually-hidden { display: none !important; }
+.que .outcome, .que .feedback { font-size: 1rem; }
+.que .rightanswer { font-size: 1.15rem; font-weight: 800; background: var(--ok-bg); border: 2px solid var(--ok); padding: 10px 12px; border-radius: 12px; }
+.que .answer > div.b3v-ok { background: var(--ok-bg) !important; border-color: var(--ok) !important; }
+.que .answer > div.b3v-bad { background: var(--bad-bg) !important; border-color: var(--bad) !important; }
+.que .icon, .que img.icon { display: none; }
+.tag { display: inline-block; margin-left: 8px; padding: 2px 10px; border-radius: 9px; font-weight: 800; font-size: .9rem; color: #fff; white-space: nowrap; }
+.tag.ok { background: var(--ok); } .tag.bad { background: var(--bad); }
+.verdict { font-size: 1.5rem; font-weight: 800; padding: 10px 16px; border-radius: 14px; color: #fff; }
+.verdict.ok { background: var(--ok); } .verdict.bad { background: var(--bad); } .verdict.part { background: #b86e00; }
+.score { font-size: 1.6rem; font-weight: 800; text-align: center; padding: 18px; border-radius: 18px; background: #1d1a18; color: #fff; }
+.readq { justify-self: start; min-height: 52px; padding: 6px 16px; border-radius: 12px; border: 3px solid var(--ink); background: #fff; font-weight: 800; }
+.qnav { display: flex; flex-wrap: wrap; gap: 8px; }
+.qnav span { min-width: 54px; text-align: center; padding: 8px; border-radius: 10px; font-weight: 800; border: 2px solid var(--line); background: #fff; }
+.qnav span.miss { background: var(--bad-bg); border-color: var(--bad); }
+.qnav span.okk { background: var(--ok-bg); border-color: var(--ok); }
+
+/* čtečka */
+.reader p { font-size: 1.3rem; line-height: 1.75; margin: 0 0 1em; padding: 6px 10px; border-radius: 10px; cursor: pointer; }
+.reader p.on { background: var(--sel); outline: 3px solid var(--warn-line); }
+.reader .pg { margin: 20px 0 8px; font-weight: 800; color: var(--soft); border-top: 2px solid var(--line); padding-top: 8px; }
+.sticky-tools { position: sticky; top: calc(80px + env(safe-area-inset-top, 0px)); z-index: 40; background: var(--bg); padding: 8px 0; }
+
+@media (max-width: 520px) { :root { --fs: 20px; } .top h1 { font-size: 1rem; } }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <button class="back" id="back" type="button" hidden>← Zpět</button>
+  <h1 id="title">Univerzita</h1>
+</header>
+<main id="view"><div class="loading">Načítám…</div></main>
+<div class="dock">
+  <button type="button" id="readBtn" aria-label="Přečíst nahlas">🔈 Přečti</button>
+  <button type="button" id="fsMinus" aria-label="Menší písmo">A−</button>
+  <button type="button" id="fsPlus" aria-label="Větší písmo">A+</button>
+</div>
+<script>
+'use strict';
+/* =====================================================================
+   Univerzita pro babičku – jednoduchá aplikace nad vu3v.cz (Moodle)
+   Heslo se nikam neukládá: aplikace si od Moodlu vezme jen přihlašovací
+   klíč (token), který zůstává v tomto iPadu.
+   ===================================================================== */
+const SITE = 'https://vu3v.cz';
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const store = {
+  get(k, d = null) { try { const v = localStorage.getItem('u3v:' + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('u3v:' + k, JSON.stringify(v)); } catch (e) {} },
+  del(k) { try { localStorage.removeItem('u3v:' + k); } catch (e) {} }
+};
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const strip = html => { const d = document.createElement('div'); d.innerHTML = html || ''; return d.textContent.replace(/\s+/g, ' ').trim(); };
+
+/* ---------- velikost písma ---------- */
+let fs = store.get('fs', window.innerWidth < 520 ? 20 : 22);
+const applyFs = () => document.documentElement.style.setProperty('--fs', fs + 'px');
+applyFs();
+$('#fsMinus').onclick = () => { fs = Math.max(16, fs - 2); store.set('fs', fs); applyFs(); };
+$('#fsPlus').onclick = () => { fs = Math.min(34, fs + 2); store.set('fs', fs); applyFs(); };
+
+/* ---------- Moodle API ---------- */
+let auth = store.get('auth');            // { token, userid, fullname }
+class WsError extends Error { constructor(msg, code) { super(msg); this.code = code; } }
+function flatten(obj, prefix, out) {
+  for (const [k, v] of Object.entries(obj)) {
+    const name = prefix ? `${prefix}[${k}]` : k;
+    if (v === undefined || v === null) continue;
+    if (typeof v === 'object') flatten(v, name, out);
+    else out.append(name, typeof v === 'boolean' ? (v ? '1' : '0') : String(v));
+  }
+  return out;
+}
+async function ws(fn, args = {}) {
+  if (!auth) throw new WsError('Nejste přihlášena.', 'notloggedin');
+  const body = flatten(args, '', new URLSearchParams({ wstoken: auth.token, wsfunction: fn, moodlewsrestformat: 'json' }));
+  let r;
+  try { r = await fetch(SITE + '/webservice/rest/server.php?moodlewsrestformat=json', { method: 'POST', body }); }
+  catch (e) { throw new WsError('Nepodařilo se spojit s univerzitou. Zkontrolujte internet a zkuste to znovu.', 'network'); }
+  const j = await r.json().catch(() => null);
+  if (j && j.exception) {
+    if (/invalidtoken|accessexception/.test(j.errorcode || '')) { logout(true); }
+    throw new WsError(j.message || 'Chyba', j.errorcode);
+  }
+  return j;
+}
+const fileUrl = u => {
+  if (!u || !auth) return u;
+  let x = String(u).replace(/^(https?:\/\/[^/]+)\/pluginfile\.php/, '$1/webservice/pluginfile.php');
+  if (!/\/webservice\/pluginfile\.php|\/tokenpluginfile\.php/.test(x)) return x;
+  x = x.replace(/([?&])(forcedownload=1)(&|$)/, '$1').replace(/[?&]$/, '');
+  return x + (x.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(auth.token);
+};
+function logView(fn, args) { ws(fn, args).catch(() => {}); }   // aby se v Moodlu zaškrtlo „hotovo“
+
+/* ---------- přihlášení ---------- */
+function logout(expired) {
+  auth = null; store.del('auth'); store.del('cache');
+  if (expired) sessionStorage.setItem('u3v-expired', '1');
+  location.hash = '#/login';
+}
+function viewLogin() {
+  setTop('Přihlášení', false);
+  const expired = sessionStorage.getItem('u3v-expired'); sessionStorage.removeItem('u3v-expired');
+  view(`
+    <div class="card login">
+      <h2>Virtuální univerzita třetího věku</h2>
+      <p class="muted">Přihlaste se stejným jménem a heslem jako na webu vu3v.cz. Stačí jednou – aplikace si přihlášení pamatuje.</p>
+      ${expired ? '<div class="notice">Přihlášení vypršelo, přihlaste se prosím znovu.</div>' : ''}
+      <form id="lf" class="card" style="border:0;padding:0">
+        <div class="field"><label for="u">Uživatelské jméno</label>
+          <input id="u" name="username" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" required></div>
+        <div class="field"><label for="p">Heslo</label>
+          <input id="p" name="password" type="password" autocomplete="current-password" required></div>
+        <div id="lerr"></div>
+        <button class="btn" type="submit">Přihlásit se</button>
+      </form>
+    </div>`);
+  $('#lf').addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = $('#lf button'); btn.disabled = true; btn.textContent = 'Přihlašuji…';
+    $('#lerr').innerHTML = '';
+    try {
+      const r = await fetch(SITE + '/login/token.php', { method: 'POST', body: new URLSearchParams({ username: $('#u').value.trim(), password: $('#p').value, service: 'moodle_mobile_app' }) });
+      const j = await r.json();
+      if (!j.token) throw new Error(j.errorcode === 'invalidlogin' ? 'Špatné jméno nebo heslo. Zkuste to prosím znovu.' : (j.error || 'Přihlášení se nepovedlo.'));
+      auth = { token: j.token };
+      const si = await ws('core_webservice_get_site_info');
+      auth = { token: j.token, userid: si.userid, fullname: si.fullname, firstname: si.firstname };
+      store.set('auth', auth);
+      location.hash = '#/';
+    } catch (err) {
+      $('#lerr').innerHTML = `<div class="error">${esc(err.message === 'Failed to fetch' ? 'Nepodařilo se spojit s univerzitou. Zkontrolujte internet.' : err.message)}</div>`;
+      btn.disabled = false; btn.textContent = 'Přihlásit se';
+    }
+  });
+}
+
+/* ---------- pomocné věci pro obrazovky ---------- */
+let renderToken = 0;
+function view(html) { const v = $('#view'); v.innerHTML = html; window.scrollTo(0, 0); return v; }
+function setTop(title, showBack = true) {
+  $('#title').textContent = title;
+  document.title = title + ' – Univerzita';
+  $('#back').hidden = !showBack;
+}
+$('#back').onclick = () => { if (history.length > 1) history.back(); else location.hash = '#/'; };
+function showError(err) {
+  view(`<div class="error">${esc(err.message || err)}</div><button class="btn ghost" type="button" onclick="location.reload()">Zkusit znovu</button>`);
+}
+async function cached(key, fn, maxAgeMs = 5 * 60 * 1000) {
+  const all = store.get('cache', {});
+  const hit = all[key];
+  if (hit && Date.now() - hit.t < maxAgeMs) return hit.v;
+  const v = await fn();
+  try { all[key] = { t: Date.now(), v }; store.set('cache', all); } catch (e) {}
+  return v;
+}
+function dropCache(prefix) { const all = store.get('cache', {}); Object.keys(all).forEach(k => { if (k.startsWith(prefix)) delete all[k]; }); store.set('cache', all); }
+
+/* ---------- 1) Moje kurzy ---------- */
+async function viewHome() {
+  setTop('Moje kurzy', false);
+  view('<div class="loading">Načítám vaše kurzy…</div>');
+  const t = ++renderToken;
+  try {
+    const courses = await cached('courses', () => ws('core_enrol_get_users_courses', { userid: auth.userid }));
+    if (t !== renderToken) return;
+    const list = courses.filter(c => c.visible !== 0).sort((a, b) => (b.lastaccess || 0) - (a.lastaccess || 0));
+    if (list.length === 1 && !sessionStorage.getItem('u3v-home')) { sessionStorage.setItem('u3v-home', '1'); }
+    view(`
+      <p style="margin:0;font-size:1.2rem">Dobrý den${auth.firstname ? ', ' + esc(auth.firstname) : ''}! Vyberte kurz:</p>
+      ${list.length ? list.map(c => `
+        <a class="big" href="#/course/${c.id}">
+          <span class="ico">🎓</span>
+          <span class="txt">${esc(strip(c.fullname))}${c.progress != null ? `<span class="sub">Hotovo ${Math.round(c.progress)} %</span>` : ''}</span>
+          <span class="ico" aria-hidden="true">›</span>
+        </a>`).join('') : '<div class="notice">Zatím nejste zapsaná do žádného kurzu.</div>'}
+      <div style="height:20px"></div>
+      <button class="btn ghost" type="button" id="lo">Odhlásit se</button>`);
+    $('#lo').onclick = () => { if (confirm('Opravdu se odhlásit? Pak bude potřeba znovu zadat jméno a heslo.')) logout(false); };
+  } catch (e) { if (t === renderToken) showError(e); }
+}
+
+/* ---------- 2) Kurz: lekce a činnosti ---------- */
+const MOD = {
+  page:     { ico: '📺', label: 'Video / text' },
+  resource: { ico: '📄', label: 'Studijní text' },
+  quiz:     { ico: '📝', label: 'Test' },
+  url:      { ico: '🔗', label: 'Odkaz' },
+  forum:    { ico: '💬', label: 'Diskuse' },
+  folder:   { ico: '📁', label: 'Složka' },
+  book:     { ico: '📘', label: 'Kniha' },
+  h5pactivity: { ico: '🎬', label: 'Interaktivní video' },
+  hvp:      { ico: '🎬', label: 'Interaktivní video' },
+  assign:   { ico: '✍️', label: 'Úkol' },
+  label:    null
+};
+async function getCourse(cid) {
+  return cached('course:' + cid, () => ws('core_course_get_contents', { courseid: cid }), 60 * 1000);
+}
+async function getCourseName(cid) {
+  const courses = await cached('courses', () => ws('core_enrol_get_users_courses', { userid: auth.userid }));
+  const c = courses.find(x => String(x.id) === String(cid));
+  return c ? strip(c.fullname) : 'Kurz';
+}
+async function viewCourse(cid) {
+  const t = ++renderToken;
+  setTop('Kurz');
+  view('<div class="loading">Načítám lekce…</div>');
+  try {
+    const [sections, name] = await Promise.all([getCourse(cid), getCourseName(cid)]);
+    if (t !== renderToken) return;
+    setTop(name);
+    let html = '';
+    sections.forEach(sec => {
+      const mods = (sec.modules || []).filter(m => m.uservisible !== false && m.visible !== 0);
+      if (!mods.length && !strip(sec.summary)) return;
+      const trackable = mods.filter(m => m.completiondata && m.modname !== 'label');
+      const allDone = trackable.length && trackable.every(m => m.completiondata.state >= 1);
+      html += `<h2 class="section-title">${esc(strip(sec.name) || 'Úvod')}${allDone ? '<span class="chip">✔ hotovo</span>' : ''}</h2>`;
+      if (strip(sec.summary) && strip(sec.summary).length < 400) html += `<div class="label-text muted">${esc(strip(sec.summary))}</div>`;
+      mods.forEach(m => {
+        if (m.modname === 'label') {
+          const txt = strip(m.description);
+          if (txt) html += `<div class="label-text muted">${esc(txt)}</div>`;
+          return;
+        }
+        const meta = MOD[m.modname] || { ico: '▫️', label: '' };
+        const isPdf = m.modname === 'resource' && (m.contents || []).some(f => /pdf/i.test(f.mimetype || f.filename || ''));
+        const done = m.completiondata && m.completiondata.state >= 1;
+        const kind = m.modname === 'quiz' ? 'quiz' : (m.modname === 'page' && /video|přednášk/i.test(m.name) ? 'video' : '');
+        const sub = m.modname === 'resource' ? (isPdf ? 'Text v PDF – lze číst nahlas' : 'Soubor') : meta.label;
+        html += `<a class="big ${kind}" href="#/mod/${m.modname}/${m.id}/${cid}">
+          <span class="ico">${m.modname === 'page' && kind === 'video' ? '🎬' : meta.ico}</span>
+          <span class="txt">${esc(strip(m.name))}<span class="sub">${esc(sub)}</span></span>
+          ${done ? '<span class="done">✔ hotovo</span>' : ''}
+        </a>`;
+      });
+    });
+    view(html || '<div class="notice">V tomto kurzu zatím nic není.</div>');
+  } catch (e) { if (t === renderToken) showError(e); }
+}
+async function findModule(cid, cmid) {
+  const sections = await getCourse(cid);
+  for (const s of sections) for (const m of (s.modules || [])) if (String(m.id) === String(cmid)) return m;
+  throw new WsError('Tuto část kurzu se nepodařilo najít.');
+}
+
+/* ---------- 3) Stránka (video / text) ---------- */
+async function viewPage(cmid, cid) {
+  const t = ++renderToken;
+  view('<div class="loading">Načítám…</div>');
+  try {
+    const m = await findModule(cid, cmid);
+    setTop(strip(m.name));
+    const res = await cached('pages:' + cid, () => ws('mod_page_get_pages_by_courses', { courseids: [cid] }), 10 * 60 * 1000);
+    if (t !== renderToken) return;
+    const page = (res.pages || []).find(p => String(p.coursemodule) === String(cmid));
+    if (!page) throw new WsError('Stránku se nepodařilo načíst.');
+    const v = view(`<div class="card"><div class="content" id="pc"></div></div>`);
+    const box = $('#pc', v);
+    const tpl = document.createElement('template');   // obsah se zpracuje dřív, než ho prohlížeč začne stahovat
+    tpl.innerHTML = page.content || '';
+    enhanceContent(tpl.content);
+    box.appendChild(tpl.content);
+    logView('mod_page_view_page', { pageid: page.id });
+    dropCache('course:' + cid);
+  } catch (e) { if (t === renderToken) showError(e); }
+}
+function enhanceContent(box) {
+  // obrázky a soubory z Moodlu potřebují přihlašovací klíč
+  $$('img[src]', box).forEach(i => { i.src = fileUrl(i.getAttribute('src')); i.loading = 'lazy'; });
+  $$('script, style, link', box).forEach(x => x.remove());
+  // videa (i přehrávač video.js) → vlastní velký přehrávač
+  const handled = new Set();
+  $$('video', box).forEach(v => {
+    const src = v.getAttribute('src') || ($('source[src]', v) || {}).getAttribute?.('src');
+    const holder = v.closest('.mediaplugin, .video-js, .vjs-fluid') || v;
+    if (src) { handled.add(src); holder.replaceWith(makePlayer(fileUrl(src), v.getAttribute('poster') ? fileUrl(v.getAttribute('poster')) : '')); }
+  });
+  $$('a[href]', box).forEach(a => {
+    const h = a.getAttribute('href');
+    if (/\.(mp4|m4v|mov|webm|m3u8)(\?|#|$)/i.test(h) && !handled.has(h)) {
+      handled.add(h);
+      a.replaceWith(makePlayer(fileUrl(h), ''));
+    } else if (/\.pdf(\?|#|$)/i.test(h) || (/pluginfile\.php/i.test(h) && /pdf/i.test(h + a.textContent))) {
+      const b = document.createElement('button');
+      b.className = 'btn ghost'; b.type = 'button'; b.style.marginTop = '8px';
+      b.textContent = '📖 Číst „' + (a.textContent.trim() || 'text') + '“ velkým písmem a nahlas';
+      b.onclick = () => openReader(fileUrl(h), a.textContent.trim());
+      a.insertAdjacentElement('afterend', b);
+      a.href = fileUrl(h); a.target = '_blank';
+    } else if (/pluginfile\.php/.test(h)) {
+      a.href = fileUrl(h); a.target = '_blank';
+    } else { a.target = '_blank'; a.rel = 'noopener'; }
+  });
+  // vložená videa z jiných serverů
+  $$('iframe[src]', box).forEach(f => {
+    const src = f.getAttribute('src');
+    f.removeAttribute('width'); f.removeAttribute('height');
+    f.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture');
+    f.setAttribute('allowfullscreen', '');
+    if (/youtube|vimeo|video|stream|player|embed|media/i.test(src)) {
+      const a = document.createElement('a');
+      a.className = 'btn'; a.style.display = 'block'; a.style.textAlign = 'center'; a.style.textDecoration = 'none'; a.style.marginTop = '10px';
+      a.href = new URL(src, SITE).href; a.target = '_blank'; a.rel = 'noopener';
+      a.textContent = '▶ Otevřít video přes celou obrazovku';
+      f.insertAdjacentElement('afterend', a);
+    }
+  });
+}
+
+/* ---------- video přehrávač ---------- */
+const fmt = s => { s = Math.max(0, Math.floor(s || 0)); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(x).padStart(2, '0'); };
+let wakeLock = null, anyPlaying = false;
+async function keepAwake(on) {
+  try {
+    if (on && 'wakeLock' in navigator && !wakeLock) { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => { wakeLock = null; }); }
+    else if (!on && wakeLock) { await wakeLock.release(); wakeLock = null; }
+  } catch (e) { wakeLock = null; }
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && anyPlaying) keepAwake(true); });
+let audioCtx = null;
+function makePlayer(src, poster) {
+  const key = 'pos:' + src.split('?')[0];
+  const w = document.createElement('div');
+  w.className = 'player';
+  w.innerHTML = `
+    <div class="resume" hidden></div>
+    <video playsinline preload="metadata" controls ${poster ? `poster="${esc(poster)}"` : ''}></video>
+    <button class="vplay" type="button">▶  PŘEHRÁT VIDEO</button>
+    <div class="vrow">
+      <button class="vbtn" type="button" data-skip="-15">⏪ 15 s zpět</button>
+      <button class="vbtn" type="button" data-skip="15">15 s dál ⏩</button>
+      <button class="vbtn" type="button" data-fs>⛶ Celá obrazovka</button>
+    </div>
+    <div class="vrow">
+      <button class="vbtn" type="button" data-rate="0.75">Pomaleji</button>
+      <button class="vbtn" type="button" data-rate="1">Normálně</button>
+      <button class="vbtn" type="button" data-rate="1.25">Rychleji</button>
+    </div>
+    <div class="vrow">
+      <button class="vbtn" type="button" data-vol="-1">🔉 Tišeji</button>
+      <button class="vbtn" type="button" data-vol="1">🔊 Hlasitěji</button>
+    </div>
+    <div class="vinfo"></div>`;
+  const v = $('video', w), play = $('.vplay', w), info = $('.vinfo', w), res = $('.resume', w);
+  v.src = src;
+  const rate = store.get('rate', 1);
+  const markRate = r => $$('[data-rate]', w).forEach(b => b.classList.toggle('on', +b.dataset.rate === r));
+  markRate(rate);
+  v.addEventListener('loadedmetadata', () => { v.playbackRate = store.get('rate', 1); });
+  $$('[data-rate]', w).forEach(b => b.onclick = () => { const r = +b.dataset.rate; v.playbackRate = r; store.set('rate', r); markRate(r); });
+  $$('[data-skip]', w).forEach(b => b.onclick = () => { v.currentTime = Math.max(0, (v.currentTime || 0) + +b.dataset.skip); });
+  $('[data-fs]', w).onclick = () => { try { if (v.webkitEnterFullscreen) v.webkitEnterFullscreen(); else if (v.requestFullscreen) v.requestFullscreen(); } catch (e) {} };
+  play.onclick = () => { if (v.paused) { const p = v.play(); if (p && p.catch) p.catch(() => { info.textContent = 'Video se nepodařilo spustit. Zkuste klepnout přímo na obraz videa.'; }); } else v.pause(); };
+  const sync = () => {
+    play.textContent = v.paused ? '▶  PŘEHRÁT VIDEO' : '❚❚  POZASTAVIT';
+    anyPlaying = !v.paused; keepAwake(!v.paused);
+    if (!v.paused && v.currentTime > 2) res.hidden = true;
+  };
+  ['play', 'pause', 'ended'].forEach(ev => v.addEventListener(ev, sync));
+  v.addEventListener('error', () => { info.textContent = 'Video se nepodařilo načíst. Zkontrolujte internet, případně se zkuste odhlásit a znovu přihlásit.'; });
+  // pokračování
+  let last = 0;
+  v.addEventListener('timeupdate', () => {
+    if (Date.now() - last < 4000) return; last = Date.now();
+    store.set(key, v.duration && v.currentTime > v.duration - 20 ? 0 : Math.floor(v.currentTime));
+  });
+  v.addEventListener('ended', () => store.set(key, 0));
+  const saved = store.get(key, 0);
+  if (saved >= 15) {
+    res.hidden = false;
+    res.innerHTML = `<span>Minule jste skončila v čase ${fmt(saved)}.</span><div class="vrow"><button class="vbtn on" type="button" data-go>▶ Pokračovat od ${fmt(saved)}</button><button class="vbtn" type="button" data-start>⏮ Od začátku</button></div>`;
+    $('[data-go]', res).onclick = () => { v.currentTime = saved; v.play(); res.hidden = true; };
+    $('[data-start]', res).onclick = () => { v.currentTime = 0; store.set(key, 0); v.play(); res.hidden = true; };
+  }
+  // hlasitost: zesílení funguje jen když server dovolí (jinak tlačítka na boku iPadu)
+  const levels = [0.5, 0.75, 1, 1.5, 2, 2.5]; let li = 2, gain = null;
+  $$('[data-vol]', w).forEach(b => b.onclick = async () => {
+    if (!gain) {
+      const ok = await fetch(src, { method: 'GET', headers: { Range: 'bytes=0-1' } }).then(r => { r.body && r.body.cancel && r.body.cancel(); return r.ok || r.status === 206; }).catch(() => false);
+      if (!ok) { info.textContent = 'Hlasitost tohoto videa řiďte tlačítky na boku iPadu.'; return; }
+      try {
+        const t = v.currentTime, wasPlaying = !v.paused;
+        v.crossOrigin = 'anonymous'; v.src = src;
+        v.addEventListener('loadedmetadata', () => { v.currentTime = t; if (wasPlaying) v.play(); }, { once: true });
+        audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+        const node = audioCtx.createMediaElementSource(v);
+        gain = audioCtx.createGain(); node.connect(gain); gain.connect(audioCtx.destination);
+      } catch (e) { info.textContent = 'Hlasitost tohoto videa řiďte tlačítky na boku iPadu.'; return; }
+    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    li = Math.max(0, Math.min(levels.length - 1, li + +b.dataset.vol));
+    gain.gain.value = levels[li];
+    info.textContent = 'Hlasitost: ' + Math.round(levels[li] * 100) + ' %';
+  });
+  return w;
+}
+
+/* ---------- 4) Studijní text (soubor) ---------- */
+async function viewResource(cmid, cid) {
+  const t = ++renderToken;
+  view('<div class="loading">Načítám…</div>');
+  try {
+    const m = await findModule(cid, cmid);
+    if (t !== renderToken) return;
+    setTop(strip(m.name));
+    const f = (m.contents || []).find(x => x.type === 'file') || (m.contents || [])[0];
+    if (!f) throw new WsError('K této části není připojený žádný soubor.');
+    const url = fileUrl(f.fileurl);
+    const isPdf = /pdf/i.test(f.mimetype || f.filename);
+    logView('mod_resource_view_resource', { resourceid: m.instance });
+    dropCache('course:' + cid);
+    if (isPdf) { openReader(url, strip(m.name), true); return; }
+    if (/^video\//.test(f.mimetype || '')) { const v = view('<div class="card" id="pc"></div>'); $('#pc', v).appendChild(makePlayer(url, '')); return; }
+    view(`<div class="card"><p>Tento soubor (${esc(f.filename)}) otevřete tlačítkem níže.</p><a class="btn" style="display:block;text-align:center;text-decoration:none" href="${esc(url)}" target="_blank">Otevřít soubor</a></div>`);
+  } catch (e) { if (t === renderToken) showError(e); }
+}
+
+/* ---------- čtečka PDF (text i naskenované stránky) ---------- */
+const LIB = {
+  pdf: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js',
+  pdfWorker: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js',
+  ocr: 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js'
+};
+const loadScript = src => new Promise((ok, ko) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => ko(new Error('Nepodařilo se načíst nástroj pro čtení. Zkontrolujte internet.')); document.head.appendChild(s); });
+async function ensurePdfJs() {
+  if (!window.pdfjsLib) await loadScript(LIB.pdf);
+  if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
+    const t = await (await fetch(LIB.pdfWorker)).text();
+    pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(new Blob([t], { type: 'text/javascript' }));
+  }
+  return pdfjsLib;
+}
+let ocrWorker = null;
+async function ensureOcr() { if (!window.Tesseract) await loadScript(LIB.ocr); if (!ocrWorker) ocrWorker = await Tesseract.createWorker('ces'); return ocrWorker; }
+function pageParagraphs(tc) {
+  const lines = []; let cur = null;
+  tc.items.forEach(it => {
+    if (it.str === undefined) return;
+    const y = Math.round(it.transform[5]), h = Math.abs(it.transform[3]) || it.height || 10;
+    if (!cur || Math.abs(cur.y - y) > h * 0.5) { cur = { y, h, text: '' }; lines.push(cur); }
+    cur.text += it.str; if (it.hasEOL) cur = null;
+  });
+  const paras = []; let p = '', prevY = null, prevH = 10;
+  lines.forEach(l => {
+    const t = l.text.replace(/\s+/g, ' ').trim(); if (!t) return;
+    const gap = prevY === null ? 0 : Math.abs(prevY - l.y);
+    if (p && gap > prevH * 1.8) { paras.push(p); p = ''; }
+    p = !p ? t : /-$/.test(p) ? p.slice(0, -1) + t : p + ' ' + t;
+    prevY = l.y; prevH = l.h;
+  });
+  if (p) paras.push(p);
+  return paras;
+}
+function looksLikeText(s) { const letters = (s.match(/[a-zA-ZÀ-ž]/g) || []).length, all = s.replace(/\s/g, '').length; return all > 40 && letters / all > 0.6 && !/�{3,}/.test(s); }
+
+let rd = null;   // stav čtečky
+function openReader(url, title, replaceView) {
+  const t = ++renderToken;
+  if (!replaceView) history.pushState({ reader: 1 }, '', location.hash.replace(/\/?$/, '') + '/cist');
+  setTop(title || 'Studijní text');
+  view(`
+    <div class="sticky-tools"><div class="row">
+      <button class="btn green" type="button" id="rPlay">🔈 Číst nahlas</button>
+      <button class="btn ghost" type="button" id="rStop">⏹ Zastavit</button>
+    </div></div>
+    <p class="muted" style="margin:0">Klepněte na kterýkoli odstavec a začnu číst od něj.</p>
+    <div class="notice" id="rStatus">Otevírám text…</div>
+    <div class="card reader" id="rText"></div>
+    <a class="btn ghost" style="display:block;text-align:center;text-decoration:none" href="${esc(url)}" target="_blank">Otevřít původní soubor</a>`);
+  rd = { paras: [], idx: 0, reading: false, done: false, token: 0, box: $('#rText'), status: $('#rStatus'), view: t };
+  $('#rPlay').onclick = () => readFrom(rd.idx || 0);
+  $('#rStop').onclick = stopReader;
+  rd.box.addEventListener('click', e => { const p = e.target.closest('p[data-i]'); if (p) readFrom(+p.dataset.i); });
+  loadPdf(url, t).catch(err => {
+    if (rd && rd.view === t) rd.status.innerHTML = '⚠ ' + esc(err.message || err) + '<br>Zkuste tlačítko „Otevřít původní soubor“ dole.';
+  });
+}
+async function loadPdf(url, t) {
+  const lib = await ensurePdfJs();
+  let data;
+  try { const r = await fetch(url); if (!r.ok) throw 0; data = await r.arrayBuffer(); }
+  catch (e) { throw new Error('Text se nepodařilo stáhnout.'); }
+  const pdf = await lib.getDocument({ data }).promise;
+  const n = pdf.numPages; let ocrPages = 0;
+  for (let i = 1; i <= n; i++) {
+    if (!rd || rd.view !== t) return;
+    rd.status.textContent = `Připravuji text… stránka ${i} z ${n}`;
+    const page = await pdf.getPage(i);
+    let paras = pageParagraphs(await page.getTextContent());
+    if (!looksLikeText(paras.join(' '))) {
+      ocrPages++;
+      rd.status.textContent = `Rozpoznávám naskenovaný text… stránka ${i} z ${n} (chvilku to trvá)`;
+      const worker = await ensureOcr();
+      const vp = page.getViewport({ scale: 2 });
+      const c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height;
+      await page.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+      const r = await worker.recognize(c); c.width = c.height = 0;
+      paras = r.data.text.split(/\n\s*\n/).map(s => s.replace(/-\n/g, '').replace(/\s+/g, ' ').trim()).filter(s => s.length > 1);
+    }
+    if (!rd || rd.view !== t) return;
+    if (n > 1) { const h = document.createElement('div'); h.className = 'pg'; h.textContent = 'Strana ' + i; rd.box.appendChild(h); }
+    paras.forEach(tx => { const p = document.createElement('p'); p.dataset.i = rd.paras.length; p.textContent = tx; rd.paras.push(tx); rd.box.appendChild(p); });
+  }
+  rd.done = true;
+  rd.status.textContent = ocrPages ? `Hotovo. ${ocrPages === 1 ? 'Jedna stránka byla naskenovaná' : ocrPages + ' stránek bylo naskenovaných'} – text je rozpoznaný automaticky a může mít drobné chyby.` : 'Text je připravený.';
+}
+
+/* ---------- předčítání ---------- */
+const czVoice = () => (window.speechSynthesis ? speechSynthesis.getVoices().find(v => /^cs/i.test(v.lang)) : null);
+if (window.speechSynthesis) speechSynthesis.getVoices();
+function chunks(text) {
+  return text.replace(/\s+/g, ' ').split(/(?<=[.!?:;])\s+/).reduce((a, s) => { if (a.length && (a[a.length - 1] + ' ' + s).length < 220) a[a.length - 1] += ' ' + s; else a.push(s); return a; }, []).filter(Boolean);
+}
+function speak(text, onEnd) {
+  const v = czVoice(); const cs = chunks(text);
+  if (!cs.length) { onEnd && onEnd(); return; }
+  cs.forEach((c, i) => { const u = new SpeechSynthesisUtterance(c); u.lang = 'cs-CZ'; if (v) u.voice = v; u.rate = 0.92; if (i === cs.length - 1 && onEnd) u.onend = onEnd; speechSynthesis.speak(u); });
+}
+let speakingOwner = null;
+function stopAll() {
+  if (window.speechSynthesis) speechSynthesis.cancel();
+  if (rd) { rd.reading = false; rd.token++; markPara(-1); }
+  if (speakingOwner) { speakingOwner.b.textContent = speakingOwner.l; speakingOwner = null; }
+  $('#readBtn').textContent = '🔈 Přečti';
+}
+function readFrom(i) {
+  if (!rd || !window.speechSynthesis) return;
+  stopAll(); rd.reading = true; rd.idx = i; const tok = ++rd.token;
+  $('#readBtn').textContent = '⏹ Stop';
+  const step = () => {
+    if (!rd || rd.token !== tok) return;
+    if (rd.idx >= rd.paras.length) { if (rd.done) { stopAll(); return; } setTimeout(step, 1000); return; }
+    markPara(rd.idx);
+    speak(rd.paras[rd.idx], () => { if (rd && rd.token === tok) { rd.idx++; step(); } });
+  };
+  step();
+}
+const stopReader = stopAll;
+function markPara(i) {
+  if (!rd) return;
+  $$('p.on', rd.box).forEach(p => p.classList.remove('on'));
+  const p = $(`p[data-i="${i}"]`, rd.box); if (p) { p.classList.add('on'); p.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+}
+function readButton(btn, label, getText) {
+  btn.onclick = () => {
+    if (speakingOwner && speakingOwner.b === btn) { stopAll(); return; }
+    stopAll(); speakingOwner = { b: btn, l: label }; btn.textContent = '⏹ Zastavit';
+    speak(getText(), () => { if (speakingOwner && speakingOwner.b === btn) { btn.textContent = label; speakingOwner = null; } });
+  };
+}
+$('#readBtn').onclick = () => {
+  if (window.speechSynthesis && (speechSynthesis.speaking || speechSynthesis.pending)) { stopAll(); return; }
+  if (rd && $('#rText')) { readFrom(rd.idx || 0); return; }
+  const parts = $$('#view h2, #view p, #view li, #view .qtext, #view .answer label, #view .answer [data-region="answer-label"], #view .rightanswer, #view .verdict, #view .score, #view .big .txt, #view .notice')
+    .filter(el => el.offsetParent !== null && !el.closest('.vrow')).map(el => el.innerText.replace(/[✔✘◐›]/g, '').trim()).filter(Boolean);
+  const text = parts.join('. ');
+  if (!text) return;
+  $('#readBtn').textContent = '⏹ Stop';
+  speak(text, () => { $('#readBtn').textContent = '🔈 Přečti'; });
+};
+
+/* ---------- 5) Testy ---------- */
+async function getQuiz(cmid, cid) {
+  const res = await cached('quizzes:' + cid, () => ws('mod_quiz_get_quizzes_by_courses', { courseids: [cid] }), 10 * 60 * 1000);
+  const q = (res.quizzes || []).find(x => String(x.coursemodule) === String(cmid));
+  if (!q) throw new WsError('Test se nepodařilo najít.');
+  return q;
+}
+async function viewQuiz(cmid, cid) {
+  const t = ++renderToken;
+  view('<div class="loading">Načítám test…</div>');
+  try {
+    const q = await getQuiz(cmid, cid);
+    setTop(strip(q.name));
+    const at = await ws('mod_quiz_get_user_attempts', { quizid: q.id, status: 'all', includepreviews: false });
+    if (t !== renderToken) return;
+    logView('mod_quiz_view_quiz', { quizid: q.id });
+    const attempts = (at.attempts || []).sort((a, b) => b.attempt - a.attempt);
+    const open = attempts.find(a => a.state === 'inprogress' || a.state === 'overdue');
+    const finished = attempts.filter(a => a.state === 'finished');
+    const max = q.sumgrades || 0;
+    const canNew = !q.attempts || attempts.length < q.attempts;
+    let html = '';
+    if (strip(q.intro)) html += `<div class="card content">${esc(strip(q.intro))}</div>`;
+    if (open) html += `<button class="btn" type="button" id="cont">▶ Pokračovat v rozdělaném testu</button>`;
+    else if (canNew) html += `<button class="btn" type="button" id="start">▶ ${finished.length ? 'Zkusit test znovu' : 'Začít test'}</button>`;
+    else html += `<div class="notice">Všechny pokusy jsou vyčerpané.</div>`;
+    if (q.timelimit) html += `<div class="notice">Pozor: na test je časový limit ${Math.round(q.timelimit / 60)} minut.</div>`;
+    if (finished.length) {
+      html += `<h2 class="section-title">Vaše dokončené pokusy</h2>`;
+      finished.forEach(a => {
+        const pts = a.sumgrades != null && max ? `${(+a.sumgrades).toLocaleString('cs-CZ', { maximumFractionDigits: 2 })} z ${(+max).toLocaleString('cs-CZ', { maximumFractionDigits: 2 })} bodů` : 'vyhodnocuje se';
+        html += `<a class="big" href="#/review/${a.id}/${cmid}/${cid}"><span class="ico">📋</span><span class="txt">Pokus ${a.attempt}: ${pts}<span class="sub">Klepněte pro zobrazení správných odpovědí</span></span><span class="ico">›</span></a>`;
+      });
+    }
+    view(html);
+    if ($('#cont')) $('#cont').onclick = () => { location.hash = `#/attempt/${open.id}/0/${cmid}/${cid}`; };
+    if ($('#start')) $('#start').onclick = async () => {
+      const b = $('#start'); b.disabled = true; b.textContent = 'Spouštím test…';
+      try {
+        const r = await ws('mod_quiz_start_attempt', { quizid: q.id });
+        location.hash = `#/attempt/${r.attempt.id}/0/${cmid}/${cid}`;
+      } catch (e) {
+        b.disabled = false; b.textContent = '▶ Začít test';
+        const msg = /preflight|password|heslo/i.test(e.message) ? 'Tento test vyžaduje heslo nebo potvrzení. Otevřete ho prosím na webu.' : e.message;
+        b.insertAdjacentHTML('afterend', `<div class="error">${esc(msg)}</div>`);
+      }
+    };
+  } catch (e) { if (t === renderToken) showError(e); }
+}
+function prepareQuestionHtml(html) {
+  const tpl = document.createElement('template'); tpl.innerHTML = html; const d = tpl.content;
+  $$('script, link, style', d).forEach(x => x.remove());
+  $$('img[src]', d).forEach(i => i.src = fileUrl(i.getAttribute('src')));
+  $$('a[href]', d).forEach(a => { if (/pluginfile/.test(a.href)) a.href = fileUrl(a.getAttribute('href')); a.target = '_blank'; });
+  return d;
+}
+function questionAnswered(q) {
+  if ($('input[type=radio]:checked, input[type=checkbox]:checked', q)) return true;
+  if ($$('input[type=text], textarea', q).some(t => t.value.trim())) return true;
+  const s = $$('select', q); if (s.length && s.every(x => x.value && x.value !== '0')) return true;
+  return false;
+}
+function collect(container) {
+  const data = [];
+  $$('input, select, textarea', container).forEach(el => {
+    if (!el.name || el.disabled) return;
+    if ((el.type === 'radio' || el.type === 'checkbox') && !el.checked) return;
+    if (el.type === 'submit' || el.type === 'button') return;
+    data.push({ name: el.name, value: el.value });
+  });
+  return data;
+}
+function addReadButtons(scope) {
+  $$('.que', scope).forEach(q => {
+    const qt = $('.qtext', q); if (!qt || $('.readq', q)) return;
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'readq'; b.textContent = '🔈 Přečíst otázku';
+    readButton(b, '🔈 Přečíst otázku', () => qt.innerText + '. ' + $$('.answer label, .answer [data-region="answer-label"]', q).map((a, i) => 'Možnost ' + (i + 1) + ': ' + a.innerText.replace(/^\s*[a-z]\.\s*/i, '').replace(/[✔✘].*$/s, '').trim()).join('. '));
+    qt.insertAdjacentElement('beforebegin', b);
+  });
+}
+// klepnutí kamkoli na řádek odpovědi ji vybere
+document.addEventListener('click', e => {
+  const row = e.target.closest('.que .answer > div');
+  if (!row || e.target.closest('input, label, a, button, select, textarea')) return;
+  const inp = $('input[type=radio], input[type=checkbox]', row);
+  if (inp && !inp.disabled) inp.click();
+});
+
+async function viewAttempt(attemptid, page, cmid, cid) {
+  const t = ++renderToken;
+  view('<div class="loading">Načítám otázky…</div>');
+  try {
+    const q = await getQuiz(cmid, cid);
+    setTop(strip(q.name));
+    const d = await ws('mod_quiz_get_attempt_data', { attemptid, page });
+    if (t !== renderToken) return;
+    const total = (d.attempt && d.attempt.layout ? d.attempt.layout.split(',').filter(x => x !== '0').length : null);
+    const v = view(`<form id="qf" onsubmit="return false" style="display:grid;gap:16px"></form>
+      <div class="row" id="qnavbtns"></div>`);
+    const form = $('#qf', v);
+    (d.questions || []).forEach(qq => { const box = prepareQuestionHtml(qq.html); while (box.firstChild) form.appendChild(box.firstChild); });
+    $$('.que', form).forEach(x => { x.removeAttribute('id'); });
+    addReadButtons(form);
+    const nav = $('#qnavbtns', v);
+    const hasNext = d.nextpage !== -1 && d.nextpage != null;
+    if (page > 0) nav.insertAdjacentHTML('beforeend', `<button class="btn ghost" type="button" id="prev">← Předchozí otázky</button>`);
+    nav.insertAdjacentHTML('beforeend', hasNext
+      ? `<button class="btn" type="button" id="next">Další otázky →</button>`
+      : `<button class="btn green" type="button" id="fin">Dokončit test ✔</button>`);
+    const save = async () => ws('mod_quiz_process_attempt', { attemptid, data: collect(form), finishattempt: false, timeup: false });
+    const go = async (btn, target) => {
+      const label = btn.textContent; btn.disabled = true; btn.textContent = 'Ukládám…';
+      try { await save(); location.hash = target; }
+      catch (e) { btn.disabled = false; btn.textContent = label; btn.insertAdjacentHTML('afterend', `<div class="error">${esc(e.message)}</div>`); }
+    };
+    if ($('#prev')) $('#prev').onclick = e => go(e.currentTarget, `#/attempt/${attemptid}/${page - 1}/${cmid}/${cid}`);
+    if ($('#next')) $('#next').onclick = e => {
+      const missing = $$('.que', form).filter(x => !questionAnswered(x)).map(x => ($('.qno', x) || {}).textContent || '?');
+      if (missing.length && !confirm('Pozor! Nemáte vyplněnou otázku č. ' + missing.join(', ') + '.\n\nOK = přesto pokračovat\nZrušit = vrátit se a doplnit')) return;
+      go(e.currentTarget, `#/attempt/${attemptid}/${d.nextpage}/${cmid}/${cid}`);
+    };
+    if ($('#fin')) $('#fin').onclick = e => go(e.currentTarget, `#/summary/${attemptid}/${cmid}/${cid}`);
+  } catch (e) { if (t === renderToken) showError(e); }
+}
+async function viewSummary(attemptid, cmid, cid) {
+  const t = ++renderToken;
+  view('<div class="loading">Kontroluji odpovědi…</div>');
+  try {
+    const q = await getQuiz(cmid, cid);
+    setTop(strip(q.name));
+    const s = await ws('mod_quiz_get_attempt_summary', { attemptid });
+    if (t !== renderToken) return;
+    const qs = s.questions || [];
+    const isMissing = x => /notyetanswered|todo|invalid|complete-?no|gaveup/i.test(x.state || '') || /nezodpov|neúpl/i.test(x.status || '');
+    const missing = qs.filter(isMissing);
+    view(`
+      ${missing.length
+        ? `<div class="error" style="font-size:1.25rem">⚠ Nevyplněné otázky: č. ${missing.map(x => esc(x.number || x.slot)).join(', ')}</div>`
+        : `<div class="notice" style="background:var(--ok-bg);border-color:var(--ok)">✔ Všechny otázky jsou vyplněné.</div>`}
+      <div class="qnav">${qs.map(x => `<span class="${isMissing(x) ? 'miss' : 'okk'}">${esc(x.number || x.slot)}</span>`).join('')}</div>
+      <div class="row">
+        <button class="btn ghost" type="button" id="backq">← Vrátit se k otázkám</button>
+        <button class="btn green" type="button" id="send">Odeslat test ✔</button>
+      </div>`);
+    $('#backq').onclick = () => { location.hash = `#/attempt/${attemptid}/0/${cmid}/${cid}`; };
+    $('#send').onclick = async e => {
+      if (!confirm(missing.length ? 'Některé otázky nejsou vyplněné. Opravdu test odeslat? Potom už nepůjde nic změnit.' : 'Odeslat test? Potom už nepůjde nic změnit.')) return;
+      const b = e.currentTarget; b.disabled = true; b.textContent = 'Odesílám…';
+      try {
+        await ws('mod_quiz_process_attempt', { attemptid, data: [], finishattempt: true, timeup: false });
+        dropCache('course:' + cid);
+        location.replace(`#/review/${attemptid}/${cmid}/${cid}`);
+      } catch (err) { b.disabled = false; b.textContent = 'Odeslat test ✔'; b.insertAdjacentHTML('afterend', `<div class="error">${esc(err.message)}</div>`); }
+    };
+  } catch (e) { if (t === renderToken) showError(e); }
+}
+async function viewReview(attemptid, cmid, cid) {
+  const t = ++renderToken;
+  view('<div class="loading">Načítám vyhodnocení…</div>');
+  try {
+    const q = await getQuiz(cmid, cid);
+    setTop('Vyhodnocení: ' + strip(q.name));
+    const r = await ws('mod_quiz_get_attempt_review', { attemptid, page: -1 });
+    if (t !== renderToken) return;
+    const v = view(`<div class="score" id="score"></div><div id="qs" style="display:grid;gap:16px"></div>
+      <a class="btn ghost" style="display:block;text-align:center;text-decoration:none" href="#/course/${cid}">Zpět na kurz</a>`);
+    const box = $('#qs', v);
+    (r.questions || []).forEach(qq => { const d = prepareQuestionHtml(qq.html); while (d.firstChild) box.appendChild(d.firstChild); });
+    const res = markReview(box);
+    let scoreTxt = '';
+    if (r.grade != null && r.grade !== '' && q.grade) scoreTxt = `Známka: ${(+r.grade).toLocaleString('cs-CZ', { maximumFractionDigits: 2 })} z ${(+q.grade).toLocaleString('cs-CZ', { maximumFractionDigits: 2 })}`;
+    $('#score').textContent = res.total ? `Správně ${res.good} z ${res.total}${scoreTxt ? ' · ' + scoreTxt : ''}` : (scoreTxt || 'Test je odeslaný.');
+    addReadButtons(box);
+  } catch (e) {
+    if (t === renderToken) {
+      if (/noreview|review/i.test(e.code || '') ) view(`<div class="notice">Správné odpovědi zatím nejdou zobrazit – univerzita je ukáže až později.</div><a class="btn ghost" style="display:block;text-align:center;text-decoration:none" href="#/course/${cid}">Zpět na kurz</a>`);
+      else showError(e);
+    }
+  }
+}
+// vyznačení správných a špatných odpovědí (i když je web nebarví)
+const norm = s => (s || '').toLowerCase().replace(/[‘’‚“”„'"«»]/g, '').replace(/^\s*[a-z0-9]{1,2}[.)]\s+/i, '').replace(/\s+/g, ' ').replace(/[.\s]+$/, '').trim();
+function markReview(scope) {
+  let good = 0, total = 0;
+  $$('.que', scope).forEach(q => {
+    const raEl = $('.rightanswer', q);
+    let raText = raEl ? raEl.textContent.replace(/\s+/g, ' ').trim().replace(/^.*?(odpověď je|odpovědi jsou|answer is|answers are)\s*:?\s*/i, '') : '';
+    const whole = norm(raText);
+    const opts = $$('.answer > div', q).map(o => {
+      const lab = $('[data-region="answer-label"], label', o) || o;
+      const inp = $('input[type=radio], input[type=checkbox]', o);
+      return { o, lab, txt: norm(lab.textContent.replace(/^\s*[a-z]\.\s*/i, '')), checked: !!(inp && inp.checked) };
+    });
+    let correct = opts.filter(d => d.o.classList.contains('correct'));
+    if (!correct.length && whole) {
+      correct = opts.filter(d => d.txt && d.txt === whole);
+      if (!correct.length) { correct = opts.filter(d => d.txt && d.txt.length > 1 && (', ' + whole + ',').includes(d.txt)); if (correct.length === opts.length && opts.length > 2) correct = []; }
+    }
+    let userOk = null;
+    if (correct.length) {
+      opts.forEach(d => {
+        const right = correct.includes(d);
+        if (right) { d.o.classList.add('b3v-ok'); d.lab.insertAdjacentHTML('beforeend', `<span class="tag ok">${d.checked ? '✔ Vaše odpověď – správně' : '✔ Správná odpověď'}</span>`); }
+        else if (d.checked) { d.o.classList.add('b3v-bad'); d.lab.insertAdjacentHTML('beforeend', '<span class="tag bad">✘ Vaše odpověď – špatně</span>'); }
+      });
+      const chosen = opts.filter(d => d.checked);
+      userOk = chosen.length > 0 && chosen.every(d => correct.includes(d)) && correct.every(d => d.checked);
+    }
+    if (q.classList.contains('correct')) userOk = true;
+    else if (q.classList.contains('incorrect') || q.classList.contains('notanswered')) userOk = false;
+    const partial = q.classList.contains('partiallycorrect');
+    $$('input.correct, select.correct', q).forEach(i => { i.style.background = 'var(--ok-bg)'; i.style.borderColor = 'var(--ok)'; });
+    $$('input.incorrect, select.incorrect', q).forEach(i => { i.style.background = 'var(--bad-bg)'; i.style.borderColor = 'var(--bad)'; });
+    if (userOk !== null || partial) {
+      total++; if (userOk) good++;
+      q.insertAdjacentHTML('afterbegin', `<div class="verdict ${partial ? 'part' : userOk ? 'ok' : 'bad'}">${partial ? '◐ Částečně správně' : userOk ? '✔ SPRÁVNĚ' : '✘ ŠPATNĚ'}</div>`);
+    }
+    const qt = $('.qtext', q);
+    if (raEl && qt && !correct.length) qt.insertAdjacentElement('afterend', raEl);
+  });
+  return { good, total };
+}
+
+/* ---------- 6) Ostatní činnosti ---------- */
+async function viewOther(modname, cmid, cid) {
+  const t = ++renderToken;
+  try {
+    const m = await findModule(cid, cmid);
+    if (t !== renderToken) return;
+    setTop(strip(m.name));
+    if (modname === 'url' && m.contents && m.contents[0]) {
+      const u = m.contents[0].fileurl;
+      logView('mod_url_view_url', { urlid: m.instance });
+      view(`<div class="card"><p>Tento odkaz vede na jinou stránku.</p><a class="btn" style="display:block;text-align:center;text-decoration:none" href="${esc(u)}" target="_blank" rel="noopener">Otevřít odkaz</a></div>`);
+      return;
+    }
+    view(`<div class="card"><p>${esc((MOD[modname] || {}).label || 'Tato část')} se dá zatím otevřít jen na webu univerzity.</p>
+      ${strip(m.description) ? `<p class="muted">${esc(strip(m.description))}</p>` : ''}
+      <a class="btn" style="display:block;text-align:center;text-decoration:none" href="${esc(m.url || SITE)}" target="_blank" rel="noopener">Otevřít na webu vu3v.cz</a></div>`);
+  } catch (e) { if (t === renderToken) showError(e); }
+}
+
+/* ---------- směrování ---------- */
+function route() {
+  stopAll();
+  rd = null;
+  const h = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
+  if (!auth && h[0] !== 'login') { location.replace('#/login'); return; }
+  if (h[0] === 'login') return auth ? location.replace('#/') : viewLogin();
+  if (!h.length) return viewHome();
+  if (h[0] === 'course') return viewCourse(h[1]);
+  if (h[0] === 'mod') {
+    const [, modname, cmid, cid, extra] = h;
+    if (extra === 'cist') return history.back();
+    if (modname === 'page') return viewPage(cmid, cid);
+    if (modname === 'resource') return viewResource(cmid, cid);
+    if (modname === 'quiz') return viewQuiz(cmid, cid);
+    return viewOther(modname, cmid, cid);
+  }
+  if (h[0] === 'attempt') return viewAttempt(+h[1], +h[2], h[3], h[4]);
+  if (h[0] === 'summary') return viewSummary(+h[1], h[2], h[3]);
+  if (h[0] === 'review') return viewReview(+h[1], h[2], h[3]);
+  location.replace('#/');
+}
+window.addEventListener('hashchange', route);
+route();
+</script>
+</body>
+</html>
